@@ -94,7 +94,12 @@ export const ExcelService = {
       }
 
       // Create or update template - use dynamic template name from request or default
-      const templateName = req.body.templateName || "PMS-APAC-Header";
+      // Generate unique template name
+      const baseName = req.body.templateName || "PMS-Header";
+      const timestamp = new Date().getTime();
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const templateName = `${baseName}-${timestamp}-${randomSuffix}`;
+
       const templateData = {
         template_name: templateName,
         description: req.body.description || "Performance Management System Header Template",
@@ -110,15 +115,9 @@ export const ExcelService = {
         is_active: true
       };
 
-      // Upsert the template
-      const template = await PMSHeaderTemplate.findOneAndUpdate(
-        { template_name: templateName },
-        templateData,
-        { upsert: true, new: true, runValidators: true }
-      );
-
+      // Create new template (remove upsert to always create new)
+      const template = await PMSHeaderTemplate.create(templateData);
       fs.unlinkSync(filePath);
-      console.log("template",template);
       return {
         template_id: template._id,
         template_name: template.template_name,
