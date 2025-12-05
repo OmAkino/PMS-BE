@@ -38,6 +38,24 @@ export const downloadTemplate = async (req: any, res: any, next: any) => {
     }
 };
 
+export const validateUploadedFile = controllerHandler(
+    async (req) => {
+        if (!req.file) {
+            throw new Error("No file uploaded");
+        }
+        const { templateId } = req.body;
+        if (!templateId) {
+            throw new Error("Template ID is required");
+        }
+        const result = await DataFillingService.validateUploadedFile(req.file.path, templateId);
+        return result;
+    },
+    {
+        statusCode: 200,
+        message: "File validated successfully",
+    }
+);
+
 export const uploadFilledData = controllerHandler(
     async (req) => {
         const result = await DataFillingService.uploadFilledData(req);
@@ -51,8 +69,8 @@ export const uploadFilledData = controllerHandler(
 
 export const getUploadHistory = controllerHandler(
     async (req) => {
-        // Assuming userId is attached to req by auth middleware
-        const userId = req.body.userId || (req as any).user?.id;
+        // Get userId from authenticated user (set by verifyToken middleware)
+        const userId = (req as any).user?.id;
         const result = await DataFillingService.getUploadHistory(userId);
         return result;
     },
@@ -74,6 +92,18 @@ export const getDataByEmployee = controllerHandler(
     }
 );
 
+export const getDataByBatch = controllerHandler(
+    async (req) => {
+        const { batchId } = req.params;
+        const result = await DataFillingService.getDataByBatch(batchId);
+        return result;
+    },
+    {
+        statusCode: 200,
+        message: "Batch data retrieved successfully",
+    }
+);
+
 export const getDataSummary = controllerHandler(
     async (req) => {
         const result = await DataFillingService.getDataSummary();
@@ -84,3 +114,29 @@ export const getDataSummary = controllerHandler(
         message: "Data summary retrieved successfully",
     }
 );
+
+export const getUploadedDataWithCalculations = controllerHandler(
+    async (req) => {
+        const { batchId } = req.params;
+        const result = await DataFillingService.getUploadedDataWithCalculations(batchId);
+        return result;
+    },
+    {
+        statusCode: 200,
+        message: "Calculated data retrieved successfully",
+    }
+);
+
+export const exportUploadedDataAsExcel = async (req: any, res: any, next: any) => {
+    try {
+        const { batchId } = req.params;
+        const result = await DataFillingService.exportUploadedDataAsExcel(batchId);
+
+        res.setHeader('Content-Type', result.contentType);
+        res.setHeader('Content-Disposition', `attachment; filename=${result.filename}`);
+        res.send(result.buffer);
+    } catch (error) {
+        next(error);
+    }
+};
+

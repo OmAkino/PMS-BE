@@ -3,7 +3,7 @@ import config from "../config/db/index";
 
 const ACCESS_SECRET = config.ACCESS_SECRET!;
 const REFRESH_SECRET = config.REFRESH_TOKEN_SECRET!;
-const ACCESS_EXPIRES = "15m";
+const ACCESS_EXPIRES = "7d";
 const REFRESH_EXPIRES = "7d";
 
 export const generateAccessToken = (payload: object) =>
